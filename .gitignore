@@ -268,3 +268,7 @@ Session.vim
 tags
 
 # End of https://www.gitignore.io/api/vim,ros,linux,python,jekyll,pycharm,sublimetext
+
+# data related files/folders
+line-follower/src/mnist_crash_course/train.csv
+line-follower/src/mnist_crash_course/test.csv
