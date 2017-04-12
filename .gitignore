@@ -272,3 +272,4 @@ tags
 # data related files/folders
 line-follower/src/mnist_crash_course/train.csv
 line-follower/src/mnist_crash_course/test.csv
+line-follower/src/old_lane_follower_past_project/data
