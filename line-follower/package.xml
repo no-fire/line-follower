@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>line-follower</name>
+  <name>line_follower</name>
   <version>0.0.0</version>
-  <description>The line-follower package</description>
+  <description>Primary package for Team Fire in CompRobo 2017 at Olin College</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
