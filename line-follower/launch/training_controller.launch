@@ -1,0 +1,9 @@
+<launch>
+	<arg name="base_name" />
+	<node name="joystick_raw" pkg="joy" type="joy_node">
+		<param name="_deadzone" value="0.01"/>
+	</node>
+	<node name="joystick_handler" pkg="line_follower" type="joy_control.py">
+		<param name="_base_name" value="$(arg base_name)"/>
+	</node>
+</launch>
