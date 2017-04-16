@@ -3,7 +3,7 @@
 '''Bag processor.
 	Inputs: a directory name (e.g. 'run1'), which has a rosbag named source.bag in it
 	Outputs:    - many 640x480 .jpg images, named sequentially from 0000.jpg, in the respective run directory's "raw" folder
-				- cmd_vel.csv, which has three columns: an index counting from zero (corresponding to the image), a value in m/s from cmd_vel.linear.x and a value in m/s from cmd_vel.angular.z
+				- cmd_vel.csv, which has two columns and each row corresponding to the images in order (from first line above). The columns are values for linear cmd_vel and angular cmd_vel.
 				- possibly a "small" folder with compressed images (similarly structured to the first line, above)
 '''
 
@@ -18,6 +18,7 @@ class BagProcessor(object):
 	def __init__(self, dir_name):
 		self.all_vel_array = None
 		self.latest_vel = np.matrix([0.5,0])
+		self.latest_img = None
 		self.dir_name = str(dir_name)
 		self.dir_name_raw = self.dir_name+'/raw/'
 		self.index=0
@@ -25,13 +26,20 @@ class BagProcessor(object):
 		if not os.path.exists(self.dir_name_raw):
 			os.makedirs(self.dir_name_raw)
 
-	def img_msg_to_jpg(self, img_msg):
+	def save_latest_img(self, img_msg):
 		'''
 		Input: an image message from ros
-		Saves that image as a .jpg file in the raw folder
+		Temporarily saves that image to self.latest_img
+		Temp image will be used if a cmd_vel comes in before the next image overwrites it.
 		'''
-		np_arr = np.fromstring(img_msg.data, np.uint8)
-		image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+		self.latest_img = np.fromstring(img_msg.data, np.uint8)
+
+	def latest_img_to_jpg(self):
+		'''
+		Saves the latest image as a .jpg file in the raw folder.
+		Activates when a cmd_vel command is received.
+		'''
+		image_np = cv2.imdecode(self.latest_img, cv2.IMREAD_COLOR)
 		filename = self.dir_name_raw+self.padded_index+'.jpg'
 		misc.imsave(filename, image_np) #uses scipy imsave
 
@@ -50,7 +58,6 @@ class BagProcessor(object):
 		else:
 			self.all_vel_array = np.concatenate((self.all_vel_array, np.array(self.latest_vel)), axis=0)
 
-
 	def get_imgs(self):
 		'''
 		Input: Bag file with images and velocities
@@ -60,12 +67,18 @@ class BagProcessor(object):
 		bag = rosbag.Bag(self.dir_name+'/source.bag')
 		for topic, msg, t in bag.read_messages(topics=['/cmd_vel', '/camera/image_raw/compressed']):
 			if (topic=='/cmd_vel'):
+				#For each incoming cmd_vel, save the cmd_vel and the last image to their respective places.
 				self.latest_vel = np.matrix([msg.linear.x, msg.angular.z])
+				if (self.latest_img!=None):
+					self.add_vel()
+					self.latest_img_to_jpg()
+					self.index+=1
+					self.padded_index = '%04d' % self.index
 			if (topic=='/camera/image_raw/compressed'):
-				self.img_msg_to_jpg(msg)
-				self.add_vel()
-				self.index+=1
-				self.padded_index = '%04d' % self.index
+				#For each image coming in, save it temporarily. The latest image will be saved when a new cmd_vel comes in.
+				self.save_latest_img(msg)
+			if self.index > 20:
+				break
 		bag.close()
 
 
@@ -80,3 +93,4 @@ if __name__ == '__main__':
 	# bp.test_image()
 
 	bp.get_imgs()
+	np.savetxt(dir_name+'/cmd_vel.csv', bp.all_vel_array, delimiter=',') #save csv of all velocities
