@@ -44,7 +44,7 @@ class JoyController(object):
         pkg_dir, _ = subprocess.Popen('rospack find line_follower', shell=True, stdout=subprocess.PIPE).communicate()
         pkg_dir = pkg_dir.strip()
 
-        recording_dir = '{}/bags/{}_{}'.format(pkg_dir, self.base, self.bagsRecorded+1)
+        recording_dir = '{}/data/{}_{}'.format(pkg_dir, self.base, self.bagsRecorded+1)
         os.makedirs(recording_dir)
 
         print recording_dir
