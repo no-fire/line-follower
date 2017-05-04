@@ -50,14 +50,15 @@ class JoyController(object):
         print recording_dir
 
         command = 'rosbag record -a -x ".*image_raw$" -O {}/source.bag'.format(recording_dir)
-        self.bag_recorder = subprocess.Popen(command, shell=True)
+        self.bag_recorder = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE)
 
         self.recording = True
         print "Recording #{} started".format(self.bagsRecorded + 1)
 
     def stop_recording(self):
         print "interrupting process"
-        self.bag_recorder.send_signal(signal.SIGINT)
+        self.bag_recorder.communicate(' ')
+        # self.bag_recorder.send_signal(signal.SIGINT)
         sleep(0.2)
         self.bag_recorder.send_signal(signal.SIGTERM)
         self.bag_recorder.wait()
