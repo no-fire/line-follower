@@ -5,7 +5,6 @@ import numpy as np
 from PIL import Image
 from scipy.ndimage import zoom
 import rospy
-from cv_bridge import CvBridge
 import cv2
 from geometry_msgs.msg import Twist, Vector3
 from sensor_msgs.msg import Image
@@ -14,19 +13,58 @@ from keras.models import Sequential
 from keras.layers.convolutional import *
 from keras.layers.core import Flatten, Dense
 from keras.optimizers import Adam
+from imageSubscriber import ImageSubscriber
 
-# from matplotlib import pyplot as plt
-# import seaborn as sns
+from cmdVelPublisher import CmdVelPublisher
+from imageSubscriber import ImageSubscriber
 
-class RobotController(object):
+class RobotController(CmdVelPublisher, ImageSubscriber, object):
     def __init__(self):
-        self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-        rospy.Subscriber(image_topic, Image, self.process_image)
-        self.moves = Twist(linear=Vector3(x = 0.0), angular=Vector3(z = 0.0))
-        cv2.namedWindow('video_window')
-        self.last_img = None
-        self.bridge = CvBridge()                    # used to convert ROS messages to OpenCV
+        rospy.init_node('robot_controller')
+        super(RobotController, self).__init__()
 
-        def process_image(self,msg):
-            cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-            
+        # Load the neural network
+        print "loading model"
+        self.model = self.get_model()
+        self.model.load_weights('epoche_2500.h5')
+
+    def get_model(self):
+        """
+        Creates the neural network
+        """
+        img_rows, img_cols = (64, 64)
+        in_shape = (img_rows, img_cols, 3)
+        model = Sequential([
+            Convolution2D(32,3,3, border_mode='same', activation='relu', input_shape=in_shape),
+            MaxPooling2D(),
+            Convolution2D(64,3,3, border_mode='same', activation='relu'),
+            MaxPooling2D(),
+            Convolution2D(128,3,3, border_mode='same', activation='relu'),
+            MaxPooling2D(),
+            Flatten(),
+            Dense(2048, activation='relu'),
+            Dense(1024, activation='relu'),
+            Dense(512, activation='relu'),
+            Dense(1)
+            ])
+        model.compile(loss='mean_absolute_error', optimizer='adam')
+        return model
+
+    def run(self):
+        """ The main run loop"""
+        r = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            if not self.cv_image is None:
+                print self.angularVector
+                time_start = rospy.get_time()
+                cv2.imshow('video_window', self.cv_image)
+                cv2.waitKey(5)
+                self.angularVector = Vector3(z=self.model.predict(np.reshape(self.cv_image, (1,64,64,3)))[0][0])
+                self.sendMessage()
+                rospy.sleep(.49955 - (rospy.get_time() - time_start))
+                print rospy.get_time() - time_start
+            r.sleep()
+
+if __name__ == '__main__':
+    robot_controller = RobotController()
+    robot_controller.run()
