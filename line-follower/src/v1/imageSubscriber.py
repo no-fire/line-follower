@@ -27,7 +27,7 @@ class ImageSubscriber(object):
     def process_image(self, msg):
         """ Process image messages from ROS and stash them in an attribute
         called cv_image for subsequent processing """
-        print "Image callback"
+        # print "Image callback"
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         cv_image = self.lower_half_image(cv_image)
         cv_image = cv2.resize(cv_image, (64, 64))
