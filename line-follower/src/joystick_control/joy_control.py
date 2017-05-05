@@ -57,11 +57,14 @@ class JoyController(object):
 
     def stop_recording(self):
         print "interrupting process"
-        self.bag_recorder.communicate(' ')
-        # self.bag_recorder.send_signal(signal.SIGINT)
+        # self.bag_recorder.communicate(' ')
+        self.bag_recorder.send_signal(signal.SIGINT)
         sleep(0.2)
         self.bag_recorder.send_signal(signal.SIGTERM)
+        self.bag_recorder.send_signal(signal.SIGKILL)
         self.bag_recorder.wait()
+
+        subprocess.Popen('pkill rosbag', shell=True).wait()
         print "Process has finished"
 
     def joy_cb(self, msg):
