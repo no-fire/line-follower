@@ -1,8 +1,8 @@
 # Neural Network Line Follower
 
-This project contains all of the code for the [final project](https://sites.google.com/site/comprobo17/projects/final-project) for Computational Robotics, spring 2017.
+Please visit our [**final website**](https://project-memory.github.io) for more information.
 
-Please visit the [project proposal](https://docs.google.com/presentation/d/1cFOgX-YuTomANDoJ3YhYx_Cik7eKBSI3l5bEE6xhqlc/pub?start=false&loop=false&delayms=3000) for more information.
+This project contains all of the code for the [final project](https://sites.google.com/site/comprobo17/projects/final-project) for Computational Robotics, spring 2017.
 
 ## Team Members
 - [Lauren Gulland](https://github.com/laurengulland)
